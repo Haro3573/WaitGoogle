@@ -164,9 +164,38 @@ chrome.tabs.onRemoved.addListener(tabId => {
   if (tabId === voiceTabId) voiceTabId = undefined;
 });
 
+async function answerLiveShoppingSpeech(speech, tabId) {
+  if (busy) return { error: 'Wait for the current WaitGoogle request, then try again.' };
+  busy = true;
+  const revision = offerRevision;
+  try {
+    const reply = await askLocal([
+      'Detect whether the latest speech contains a shopper question or a request for shopping advice.',
+      'For ordinary conversation, a statement alone, or a question unrelated to shopping, reply with exactly SKIP.',
+      'Otherwise answer the question briefly. Use captured evidence when available, and state what you cannot verify.',
+      'Latest speech: ' + JSON.stringify(speech)
+    ].join(' '));
+    if (revision !== offerRevision || tabId !== voiceTabId || /^SKIP[.!]?$/i.test(reply.trim())) return {};
+    conversation.push({ shopper: speech, assistant: reply });
+    addMessage('You · live question', speech);
+    addMessage('Gemini Nano · live answer', reply);
+    return { answer: reply };
+  } catch (error) {
+    return { error: error.message };
+  } finally {
+    busy = false;
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (sender.tab?.id !== voiceTabId || sender.url !== chrome.runtime.getURL('voice.html') ||
-      typeof message.voiceTranscript !== 'string') return;
+  if (sender.tab?.id !== voiceTabId || sender.url !== chrome.runtime.getURL('voice.html')) return;
+  if (typeof message.liveShoppingSpeech === 'string') {
+    const speech = message.liveShoppingSpeech.trim().slice(0, 1500);
+    if (!speech) return;
+    answerLiveShoppingSpeech(speech, sender.tab.id).then(sendResponse);
+    return true;
+  }
+  if (typeof message.voiceTranscript !== 'string') return;
   voiceQuestion = message.voiceTranscript.slice(0, 1500);
   el('question').value = voiceQuestion;
   status('Review the transcript and choose Ask locally.');

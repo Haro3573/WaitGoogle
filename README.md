@@ -18,6 +18,8 @@ Open **Open the sample ad**, and click the sponsored offer. The side panel saves
 
 **Start microphone** opens a WaitGoogle tab. Choose **Start local transcription** and allow microphone access for WaitGoogle when Chrome prompts. The English speech pack transcribes audio on the device. When finished, choose **Stop microphone**. Edit the text if needed and choose **Use transcript** to return it to the side panel. Select **Ask locally** there. The reply uses a local English speech synthesis voice when one is available.
 
+**Answer shopping questions as I speak** is optional. While the microphone is active, Gemini Nano checks finalized speech for shopping questions and shows answers in the microphone tab and side panel. Audio, question detection, and answers stay on the device.
+
 **Prepare cloud request** creates an editable draft. Cancel to discard it, or select **Approve and send** to share the text with Cloud Gemini. Current cloud responses reason over the approved text. They do not fetch live listings.
 
 ## License

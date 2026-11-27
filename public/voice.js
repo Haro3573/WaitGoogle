@@ -4,6 +4,51 @@ const transcript = document.querySelector('#transcript');
 const useTranscript = document.querySelector('#use-transcript');
 let recognition;
 let speechError;
+const liveQA = document.querySelector('#live-qa');
+const liveAnswers = document.querySelector('#live-answers');
+const liveStatus = document.querySelector('#live-status');
+let pendingSpeech = '';
+let liveTimer;
+let answering = false;
+
+function scheduleLiveAnswer() {
+  clearTimeout(liveTimer);
+  if (liveQA.checked && pendingSpeech) liveTimer = setTimeout(answerLiveQuestion, 1000);
+}
+
+async function answerLiveQuestion() {
+  if (!liveQA.checked || !pendingSpeech || answering) return;
+  const speech = pendingSpeech;
+  pendingSpeech = '';
+  answering = true;
+  liveStatus.textContent = 'Checking for a shopping question on this device…';
+  try {
+    const result = await chrome.runtime.sendMessage({ liveShoppingSpeech: speech });
+    if (result?.error) throw new Error(result.error);
+    if (!result) throw new Error('Open the WaitGoogle side panel to use live answers.');
+    if (liveQA.checked && result.answer) {
+      const message = document.createElement('p');
+      const question = document.createElement('strong');
+      question.textContent = speech;
+      message.append(question, document.createTextNode('\n' + result.answer));
+      liveAnswers.append(message);
+    }
+    liveStatus.textContent = '';
+  } catch (error) {
+    if (liveQA.checked) liveStatus.textContent = error.message;
+  } finally {
+    answering = false;
+    scheduleLiveAnswer();
+  }
+}
+
+liveQA.onchange = () => {
+  document.querySelector('#live-section').hidden = !liveQA.checked;
+  if (liveQA.checked) return;
+  pendingSpeech = '';
+  clearTimeout(liveTimer);
+  liveStatus.textContent = '';
+};
 
 function updateTranscriptButton() {
   useTranscript.disabled = Boolean(recognition) || !transcript.value.trim();
@@ -58,9 +103,17 @@ button.onclick = async () => {
     recognition.processLocally = true;
     recognition.continuous = true;
     recognition.interimResults = true;
+    let finalThrough = 0;
     recognition.onresult = event => {
       const phrases = Array.from(event.results, result => result[0].transcript.trim());
       transcript.value = [previousTranscript, ...phrases].filter(Boolean).join(' ').slice(0, 1500);
+      while (finalThrough < event.results.length && event.results[finalThrough].isFinal) {
+        if (liveQA.checked) {
+          pendingSpeech = (pendingSpeech + ' ' + phrases[finalThrough]).trim().slice(-1500);
+        }
+        finalThrough += 1;
+      }
+      scheduleLiveAnswer();
     };
     recognition.onerror = event => {
       speechError = 'Local speech recognition: ' + event.error + '.';
