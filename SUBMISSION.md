@@ -14,11 +14,17 @@ The extension invokes Firebase AI Logic in local-only mode for the image-and-tex
 
 The sample merchant and offers are fictional. The browser extension was built during the hackathon. Installation and reviewer instructions are in the source repository README.
 
-## Recording outline
+## Demo recording script
 
-- **0:00–0:20** Open the sample and click the $49 ad. Show the saved image and exact landing-page text.
-- **0:20–0:55** Compare with Gemini Nano. Show the two variants and the evidence for the mismatch.
-- **0:55–1:25** Ask about a $60 commute budget using the microphone. Show the transcript and local answer.
-- **1:25–1:50** Prepare a cloud request, show its text, and cancel. Show that the draft disappears.
-- **1:50–2:25** Prepare it again, edit it, approve it, and show the Cloud Gemini response.
-- **2:25–2:50** Show a local comparison while offline after model setup. End with the Chrome and Firebase AI Logic implementation.
+Target runtime is 2:50. Record the real extension and keep the side panel visible wherever it shows evidence, model output, or a consent decision. Record with English narration or align English captions to the final footage.
+
+| Time | Show on screen | Suggested English narration |
+| --- | --- | --- |
+| 0:00–0:20 | Open the sample and click the $49 sponsored offer. Let the saved image and the product page appear together. | “The ad promises noise-canceling earbuds for forty-nine dollars. WaitGoogle saves that offer before we leave the ad and puts it next to the actual product page.” |
+| 0:20–0:55 | Select **Compare with Gemini Nano**. Hold on the real answer and the Essential and Plus evidence. | “The forty-nine-dollar Essential variant lacks active noise cancellation. The seventy-nine-dollar Plus variant includes it. Gemini Nano compares the evidence on this device through Firebase AI Logic.” |
+| 0:55–1:25 | Select **Start microphone**, speak the question, show the transcript, and select **Ask locally**. | “I need these for my train commute and my budget is sixty dollars. What would I give up if I buy the Essential variant?” |
+| 1:25–1:50 | Select **Prepare cloud request**. Show its text and size, then cancel. | “For a deeper comparison, WaitGoogle drafts a request I can edit. I can review what it would share, or cancel it.” |
+| 1:50–2:25 | Draft the request again, edit it, choose **Approve and send**, and show the real Cloud Gemini response. | “I’ll ask for a checklist to compare the two variants for a noisy commute. Cloud Gemini receives the text I approved.” |
+| 2:25–2:50 | Show that networking is off and run a new local comparison. End on the local result and WaitGoogle name. | “With the model installed, I can still compare an ad and its offer offline. The shopping context stays on this device until I choose what to share.” |
+
+Capture the microphone transcript and successful local output before using the corresponding lines. If the live result differs from the suggested narration, revise the narration to match the footage. Keep the cloud token, browser profile details, and private tabs outside the recording.
