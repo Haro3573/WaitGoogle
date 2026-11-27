@@ -1,6 +1,6 @@
-import { initializeApp } from 'firebase/app';
-import { initializeAppCheck, CustomProvider, getToken } from 'firebase/app-check';
-import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from 'firebase/ai';
+import { initializeApp } from '@firebase/app';
+import { initializeAppCheck, CustomProvider, getToken } from '@firebase/app-check';
+import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from '@firebase/ai';
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,

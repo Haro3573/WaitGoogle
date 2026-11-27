@@ -7,7 +7,7 @@ WaitGoogle is a desktop Chrome extension that preserves an image ad, compares it
 If you received the prebuilt Chrome ZIP, extract it and select the extracted folder in **Load unpacked**. It already points to the WaitGoogle Firebase web app. You can skip the Node.js and build steps below. The App Check debug token is provided separately.
 
 1. Use desktop Google Chrome on a machine that supports Gemini Nano. See [Firebase's Chrome and model setup](https://firebase.google.com/docs/ai-logic/hybrid/web/get-started), including the multimodal Prompt API setting for your browser version.
-2. Use Node.js 22.12 or newer. Run `npm ci`. Copy `.env.example` to `.env.local` and supply the Firebase web app's API key, project ID, and app ID. The project must have Firebase AI Logic with the Gemini Developer API enabled.
+2. Use Node.js 24.12 or newer. Run `npm ci`. Copy `.env.example` to `.env.local` and supply the Firebase web app's API key, project ID, and app ID. The project must have Firebase AI Logic with the Gemini Developer API enabled.
 3. Run `npm run build`. In `chrome://extensions`, enable Developer mode, select **Load unpacked**, and choose `dist`.
 4. In Firebase App Check, register a judge-specific debug token for the web app. Enter it in the extension's **Options** page. Share judge tokens privately. The MV3 build uses the SDK's debug token exchange without loading remote reCAPTCHA scripts.
 5. Pin WaitGoogle, open its side panel, and select **Set up local AI**. Allow any model download to finish before testing offline.
