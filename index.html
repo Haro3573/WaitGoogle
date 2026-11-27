@@ -23,7 +23,7 @@
       <h2 id="research-title">Deeper research</h2>
       <p>Review the exact text Cloud Gemini will receive.</p>
       <button id="draft" class="quiet">Prepare cloud request</button>
-      <form id="handoff" hidden><label for="outgoing">Text to send</label><textarea id="outgoing" maxlength="6000" required></textarea><div class="actions"><button type="button" id="cancel" class="quiet">Cancel</button><button>Approve and send</button></div></form>
+      <form id="handoff" hidden><label for="outgoing">Text to send</label><textarea id="outgoing" maxlength="6000" aria-describedby="outgoing-size" required></textarea><small id="outgoing-size"></small><div class="actions"><button type="button" id="cancel" class="quiet">Cancel</button><button>Approve and send</button></div></form>
     </section>
   </main>
   <footer id="status" role="status">Cloud sharing requires your approval.</footer>

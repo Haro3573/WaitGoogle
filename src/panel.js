@@ -9,6 +9,14 @@ if (captureNotice) status(captureNotice);
 let conversation = [];
 let busy = false;
 let recognition;
+let offerRevision = 0;
+const outgoing = el('outgoing');
+
+function showOutgoingSize() {
+  el('outgoing-size').textContent = new TextEncoder().encode(outgoing.value).length + ' bytes of request text';
+}
+
+outgoing.addEventListener('input', showOutgoingSize);
 
 function redraw() {
   el('ad').textContent = ad ? ad.text || 'Image captured.' : 'Open the sample or capture a page with an image ad.';
@@ -96,16 +104,19 @@ for (const kind of ['ad', 'product']) {
 
 el('compare').onclick = run(async () => {
   if (!ad || !product) throw new Error('Capture both the ad and the product page first.');
+  const revision = offerRevision;
   const instruction = 'Compare the advertised and offered product variants, price, features and conditions. State whether they match, differ, or lack enough evidence. Quote the relevant lines and ask one question about the shopper’s needs.';
   let usedImage = Boolean(ad.image);
   let reply;
   try {
     reply = await askLocal(instruction, usedImage);
   } catch (error) {
+    if (revision !== offerRevision) return;
     if (!usedImage || !ad.text) throw error;
     reply = await askLocal(instruction + ' Compare text evidence only. The ad image could not be analyzed.');
     usedImage = false;
   }
+  if (revision !== offerRevision) return;
   conversation.push({ assistant: reply });
   addMessage('Gemini Nano · comparison', reply);
   status(usedImage ? 'Image and text compared on this device.' : 'Text evidence compared on this device.');
@@ -123,7 +134,9 @@ let voiceQuestion = '';
 el('consult').onsubmit = run(async () => {
   const question = el('question').value.trim();
   if (!question) return status('Enter a question first.');
+  const revision = offerRevision;
   const reply = await askLocal('Answer this shopper question: ' + JSON.stringify(question));
+  if (revision !== offerRevision) return;
   conversation.push({ shopper: question, assistant: reply });
   addMessage('You', question);
   addMessage('Gemini Nano', reply);
@@ -169,23 +182,26 @@ el('voice').onclick = async () => {
 };
 
 el('draft').onclick = run(async () => {
+  const revision = offerRevision;
+  let text = '';
+  let message = 'Review or edit this text before approving.';
   try {
-    el('outgoing').value = (await askLocal('Draft a short cloud shopping research request for the shopper to edit. Include only relevant preferences and evidence, remaining uncertainties, and the requested comparison. Exclude identifiers and full conversation history. Return the exact request text.')).slice(0, 6000);
+    text = (await askLocal('Draft a short cloud shopping research request for the shopper to edit. Include only relevant preferences and evidence, remaining uncertainties, and the requested comparison. Exclude identifiers and full conversation history. Return the exact request text.')).slice(0, 6000);
   } catch {
-    el('outgoing').value = '';
-    status('Local drafting is unavailable. Write the request you want to share.');
-    el('handoff').hidden = false;
-    el('outgoing').focus();
-    return;
+    message = 'Local drafting is unavailable. Write the request you want to share.';
   }
+  if (revision !== offerRevision) return;
+  outgoing.value = text;
+  showOutgoingSize();
   el('handoff').hidden = false;
-  el('outgoing').focus();
-  status('Review or edit this text before approving.');
+  outgoing.focus();
+  status(message);
 }, 'Drafting on this device…');
 
 el('cancel').onclick = () => {
   if (busy) return;
-  el('outgoing').value = '';
+  outgoing.value = '';
+  showOutgoingSize();
   el('handoff').hidden = true;
   el('draft').focus();
   status('Cloud request cancelled.');
@@ -194,8 +210,17 @@ el('cancel').onclick = () => {
 el('handoff').onsubmit = run(async () => {
   const text = el('outgoing').value;
   if (!text.trim()) return status('Enter the research request you want to send.');
-  const reply = await sendApprovedText(text);
-  el('outgoing').value = '';
+  const revision = offerRevision;
+  outgoing.readOnly = true;
+  let reply;
+  try {
+    reply = await sendApprovedText(text);
+  } finally {
+    outgoing.readOnly = false;
+  }
+  if (revision !== offerRevision) return;
+  outgoing.value = '';
+  showOutgoingSize();
   el('handoff').hidden = true;
   addMessage('Cloud Gemini', reply);
   status('Cloud research completed.');
@@ -204,12 +229,15 @@ el('handoff').onsubmit = run(async () => {
 chrome.storage.session.onChanged.addListener(changes => {
   if (changes.captureNotice?.newValue) status(changes.captureNotice.newValue);
   if (!changes.ad && !changes.product) return;
+  offerRevision += 1;
+  if (!changes.captureNotice?.newValue) status('Offer evidence updated on this device.');
   if (changes.ad) ad = changes.ad.newValue;
   if (changes.product) product = changes.product.newValue;
   conversation = [];
   el('conversation').replaceChildren();
   el('handoff').hidden = true;
-  el('outgoing').value = '';
+  outgoing.value = '';
+  showOutgoingSize();
   redraw();
 });
 
