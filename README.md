@@ -4,7 +4,7 @@ WaitGoogle is a desktop Chrome extension that preserves an image ad, compares it
 
 ## Install for judging
 
-For the quickest setup, download the [prebuilt Chrome ZIP](https://github.com/Haro3573/WaitGoogle/releases/download/v0.1.0/waitgoogle-chrome.zip). Extract it, open `chrome://extensions`, enable Developer mode, and select the extracted folder in **Load unpacked**. The build points to the WaitGoogle Firebase web app. Skip steps 2 and 3 when using the ZIP. The App Check debug token is provided separately.
+For the quickest setup, download the [prebuilt Chrome ZIP](https://github.com/Haro3573/WaitGoogle/releases/latest/download/waitgoogle-chrome.zip). Extract it, open `chrome://extensions`, enable Developer mode, and select the extracted folder in **Load unpacked**. The build points to the WaitGoogle Firebase web app. Skip steps 2 and 3 when using the ZIP. The App Check debug token is provided separately.
 
 1. Use desktop Google Chrome on a machine that supports Gemini Nano. See [Firebase's Chrome and model setup](https://firebase.google.com/docs/ai-logic/hybrid/web/get-started), including the multimodal Prompt API setting for your browser version.
 2. Use Node.js 24.12 or newer. Run `npm ci`. Copy `.env.example` to `.env.local` and supply the Firebase web app's API key, project ID, and app ID. The project must have Firebase AI Logic with the Gemini Developer API enabled.
@@ -16,7 +16,7 @@ For the quickest setup, download the [prebuilt Chrome ZIP](https://github.com/Ha
 
 Open **Open the sample ad**, and click the sponsored offer. The side panel saves the ad before navigation and reads the two variants on the destination page. On a normal website, right-click a linked ad image and choose **Save image ad and open its offer**. Once the destination opens, click the WaitGoogle toolbar icon to grant access to that tab and choose **Capture product page**. Some sites restrict copying image pixels. When visible ad text is available, the extension keeps that text. The fictional $49 Tide Buds Essential variant lacks active noise cancellation. The $79 Plus variant includes it. Select **Compare with Gemini Nano** and ask a follow-up about your commute and budget.
 
-**Start microphone** uses the English on-device speech pack when Chrome supports it. Review the transcript and select **Ask locally**. The reply uses a local English speech synthesis voice when one is available.
+**Start microphone** opens a WaitGoogle tab. Choose **Start local transcription** and allow microphone access for WaitGoogle when Chrome prompts. The English speech pack transcribes audio on the device. The tab closes after returning the transcript. Review it in the side panel and select **Ask locally**. The reply uses a local English speech synthesis voice when one is available.
 
 **Prepare cloud request** creates an editable draft. Cancel to discard it, or select **Approve and send** to share the text with Cloud Gemini. Current cloud responses reason over the approved text. They do not fetch live listings.
 

@@ -8,7 +8,6 @@ let { ad, product, captureNotice } = await chrome.storage.session.get(['ad', 'pr
 if (captureNotice) status(captureNotice);
 let conversation = [];
 let busy = false;
-let recognition;
 let offerRevision = 0;
 const outgoing = el('outgoing');
 
@@ -146,40 +145,33 @@ el('consult').onsubmit = run(async () => {
   status('Answer generated on this device.');
 }, 'Consulting Gemini Nano…');
 
-el('voice').onclick = async () => {
-  if (recognition) return recognition.stop();
-  const SpeechRecognition = globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition;
-  if (!SpeechRecognition?.available) return status('Local speech is unavailable. Type your question.');
-  try {
-    const options = { langs: ['en-US'], processLocally: true };
-    const available = await SpeechRecognition.available(options);
-    if (available === 'downloadable') {
-      status('Downloading English speech recognition…');
-      if (!await SpeechRecognition.install(options)) throw new Error('Speech pack could not be installed.');
-    } else if (available !== 'available') {
-      throw new Error('English local speech is unavailable.');
+let voiceTabId;
+el('voice').onclick = run(async () => {
+  if (voiceTabId !== undefined) {
+    try {
+      await chrome.tabs.update(voiceTabId, { active: true });
+      return;
+    } catch {
+      voiceTabId = undefined;
     }
-    recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.processLocally = true;
-    recognition.onresult = event => {
-      voiceQuestion = event.results[0][0].transcript.trim();
-      el('question').value = voiceQuestion;
-      status('Review the transcript and choose Ask locally.');
-    };
-    recognition.onerror = event => status('Microphone: ' + event.error + '. You can type your question.');
-    recognition.onend = () => {
-      recognition = undefined;
-      el('voice').textContent = 'Start microphone';
-    };
-    recognition.start();
-    el('voice').textContent = 'Stop microphone';
-    status('Listening on this device…');
-  } catch (error) {
-    recognition = undefined;
-    status(error.message + ' You can type your question.');
   }
-};
+  const tab = await chrome.tabs.create({ url: chrome.runtime.getURL('voice.html') });
+  voiceTabId = tab.id;
+  status('Record your question in the WaitGoogle microphone tab.');
+}, 'Opening the microphone tab…');
+
+chrome.tabs.onRemoved.addListener(tabId => {
+  if (tabId === voiceTabId) voiceTabId = undefined;
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (sender.tab?.id !== voiceTabId || sender.url !== chrome.runtime.getURL('voice.html') ||
+      typeof message.voiceTranscript !== 'string') return;
+  voiceQuestion = message.voiceTranscript.slice(0, 1500);
+  el('question').value = voiceQuestion;
+  status('Review the transcript and choose Ask locally.');
+  sendResponse(true);
+});
 
 el('draft').onclick = run(async () => {
   const revision = offerRevision;
