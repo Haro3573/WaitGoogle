@@ -9,9 +9,12 @@
 <body>
 <main>
 <h1>WaitGoogle microphone</h1>
-<p>Speak one short question. Chrome transcribes it on this device. Review the transcript in WaitGoogle before sending it to Gemini Nano.</p>
+<p>Chrome transcribes your question on this device. Stop the microphone when you finish speaking, then review the text before returning to WaitGoogle.</p>
 <button id="listen">Start local transcription</button>
 <p role="status"></p>
+<label for="transcript">Transcript</label>
+<textarea id="transcript" rows="4" maxlength="1500"></textarea>
+<button id="use-transcript" disabled>Use transcript</button>
 </main>
 <script src="voice.js"></script>
 </body>
