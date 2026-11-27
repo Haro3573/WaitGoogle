@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WaitGoogle</title>
+</head>
+<body>
+  <header><div class="brand"><span aria-hidden="true">W</span> WaitGoogle</div><button id="setup" class="quiet">Set up local AI</button></header>
+  <main>
+    <section class="intro"><h1>Shop with the facts.</h1><p>Compare an ad with the offer you actually land on.</p><button id="demo">Open the sample ad</button></section>
+    <section class="evidence" aria-label="Evidence">
+      <article><h2>Original ad</h2><img id="ad-image" hidden alt="Captured product advertisement"><p id="ad">Open the sample or capture a page with an image ad.</p><button id="capture-ad" class="quiet">Capture ad</button></article>
+      <article><h2>Product page</h2><p id="product">Capture the destination page after following the ad.</p><button id="capture-product" class="quiet">Capture product page</button></article>
+    </section>
+    <button id="compare">Compare with Gemini Nano</button>
+    <section aria-labelledby="consult-title">
+      <h2 id="consult-title">Private consultation</h2>
+      <div id="conversation" role="log" aria-live="polite"></div>
+      <form id="consult"><label for="question">What matters to you?</label><textarea id="question" maxlength="1500" placeholder="I need noise cancellation for my commute…" required></textarea><div class="actions"><button type="button" id="voice" class="quiet">Start microphone</button><button>Ask locally</button></div></form>
+    </section>
+    <section aria-labelledby="research-title">
+      <h2 id="research-title">Deeper research</h2>
+      <p>Review the exact text Cloud Gemini will receive.</p>
+      <button id="draft" class="quiet">Prepare cloud request</button>
+      <form id="handoff" hidden><label for="outgoing">Text to send</label><textarea id="outgoing" maxlength="6000" required></textarea><div class="actions"><button type="button" id="cancel" class="quiet">Cancel</button><button>Approve and send</button></div></form>
+    </section>
+  </main>
+  <footer id="status" role="status">Cloud sharing requires your approval.</footer>
+  <script type="module" src="/src/panel.js"></script>
+</body>
+</html>
