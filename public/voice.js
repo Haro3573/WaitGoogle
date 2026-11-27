@@ -1,3 +1,5 @@
+import { isUnfinishedQuestion } from './spoken-question.mjs';
+
 const button = document.querySelector('#listen');
 const status = document.querySelector('[role=status]');
 const transcript = document.querySelector('#transcript');
@@ -13,7 +15,9 @@ let answering = false;
 
 function scheduleLiveAnswer() {
   clearTimeout(liveTimer);
-  if (liveQA.checked && pendingSpeech) liveTimer = setTimeout(answerLiveQuestion, 1000);
+  if (liveQA.checked && pendingSpeech && !isUnfinishedQuestion(pendingSpeech)) {
+    liveTimer = setTimeout(answerLiveQuestion, 1600);
+  }
 }
 
 async function answerLiveQuestion() {

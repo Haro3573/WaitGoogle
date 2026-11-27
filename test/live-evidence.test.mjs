@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { isUnfinishedQuestion } from '../public/spoken-question.mjs';
 import { productEvidenceForSpeech, renderLiveEvidence } from '../src/live-evidence.mjs';
 
 const product = [
@@ -31,4 +32,16 @@ test('approves only existing source lines when there is no price in the question
   const scope = productEvidenceForSpeech('Does Essential include ANC?', product);
   assert.match(renderLiveEvidence('LINE 2', scope), /The Essential variant does not include/);
   assert.equal(renderLiveEvidence('LINE 999', scope), 'I couldn’t verify that from the captured product page.');
+});
+
+
+test('holds the real split utterance and resolves its bare transcribed price', () => {
+  const first = 'Does the 49';
+  const complete = first + ' Option Include active noise cancellation';
+  assert.equal(isUnfinishedQuestion(first), true);
+  assert.equal(isUnfinishedQuestion(complete), false);
+  const scope = productEvidenceForSpeech(complete, product);
+  const answer = renderLiveEvidence('LINE 1', scope);
+  assert.match(answer, /The Essential variant does not include active noise cancellation/);
+  assert.doesNotMatch(answer, /The Plus variant/);
 });

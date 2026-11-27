@@ -1,12 +1,14 @@
 const pricePattern = /\$\s*(\d[\d,]*(?:\.\d{1,2})?)(?!\d|\.\d)/g;
 const spokenPricePattern = /(?:\$\s*|\bdollars?\s+)(\d[\d,]*(?:\.\d{1,2})?)(?!\d|\.\d)|\b(\d[\d,]*(?:\.\d{1,2})?)\s+dollars?\b/gi;
 
+const optionPricePattern = /\b(\d[\d,]*(?:\.\d{1,2})?)\s+(?:option|variant|model|offer|version)\b/gi;
+
 function amounts(text, pattern) {
   return [...text.matchAll(pattern)].map(match => Number((match[1] ?? match[2]).replaceAll(',', '')));
 }
 
 export function productEvidenceForSpeech(speech, productText = '') {
-  const prices = [...new Set(amounts(speech, spokenPricePattern))];
+  const prices = [...new Set([...amounts(speech, spokenPricePattern), ...amounts(speech, optionPricePattern)])];
   const lines = productText.split('\n').map(line => line.trim()).filter(Boolean);
   if (prices.length === 0) return { lines, priceScoped: false };
 
