@@ -12,7 +12,7 @@ WaitGoogle is a desktop Chrome extension that preserves an image ad, compares it
 
 ## Try the demo
 
-Open **Open the sample ad**, and click the sponsored offer. The side panel saves the ad before navigation and reads the two variants on the destination page. On normal websites, click the extension toolbar icon on the current site if Chrome asks for page access. The fictional $49 Tide Buds Essential variant lacks active noise cancellation. The $79 Plus variant includes it. Select **Compare with Gemini Nano** and ask a follow-up about your commute and budget.
+Open **Open the sample ad**, and click the sponsored offer. The side panel saves the ad before navigation and reads the two variants on the destination page. On a normal website, right-click a linked ad image and choose **Save image ad and open its offer**. Once the destination opens, click the WaitGoogle toolbar icon to grant access to that tab and choose **Capture product page**. Some sites restrict copying image pixels. When visible ad text is available, the extension keeps that text. The fictional $49 Tide Buds Essential variant lacks active noise cancellation. The $79 Plus variant includes it. Select **Compare with Gemini Nano** and ask a follow-up about your commute and budget.
 
 **Start microphone** uses the English on-device speech pack when Chrome supports it. Review the transcript and select **Ask locally**. The reply uses a local English speech synthesis voice when one is available.
 

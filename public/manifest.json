@@ -4,10 +4,25 @@
   "version": "0.1.0",
   "description": "Check an ad against the product page and get private shopping advice.",
   "minimum_chrome_version": "139",
-  "permissions": ["sidePanel", "storage", "scripting", "activeTab"],
-  "host_permissions": ["https://firebasevertexai.googleapis.com/*", "https://firebaseappcheck.googleapis.com/*"],
-  "background": {"service_worker": "background.js"},
-  "side_panel": {"default_path": "index.html"},
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "scripting",
+    "activeTab",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://firebasevertexai.googleapis.com/*",
+    "https://firebaseappcheck.googleapis.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
   "options_page": "settings.html",
-  "action": {"default_title": "Open WaitGoogle"}
+  "action": {
+    "default_title": "Open WaitGoogle"
+  }
 }

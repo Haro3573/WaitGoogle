@@ -4,7 +4,8 @@ import { localModel, sendApprovedText } from './inference';
 
 const el = id => document.getElementById(id);
 const status = text => { el('status').textContent = text; };
-let { ad, product } = await chrome.storage.session.get(['ad', 'product']);
+let { ad, product, captureNotice } = await chrome.storage.session.get(['ad', 'product', 'captureNotice']);
+if (captureNotice) status(captureNotice);
 let conversation = [];
 let busy = false;
 let recognition;
@@ -201,6 +202,7 @@ el('handoff').onsubmit = run(async () => {
 }, 'Sending the approved text to Cloud Gemini…');
 
 chrome.storage.session.onChanged.addListener(changes => {
+  if (changes.captureNotice?.newValue) status(changes.captureNotice.newValue);
   if (!changes.ad && !changes.product) return;
   if (changes.ad) ad = changes.ad.newValue;
   if (changes.product) product = changes.product.newValue;
