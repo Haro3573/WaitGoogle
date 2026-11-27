@@ -9,7 +9,8 @@ const config = {
 };
 
 let app;
-let local;
+let localText;
+let localImage;
 let cloud;
 let appCheck;
 
@@ -20,9 +21,14 @@ function firebaseApp() {
   return app ??= initializeApp(config);
 }
 
-export function localModel() {
-  return local ??= getGenerativeModel(getAI(firebaseApp(), { backend: new GoogleAIBackend() }), {
-    mode: InferenceMode.ONLY_ON_DEVICE
+export function localModel(withImage = false) {
+  const ai = getAI(firebaseApp(), { backend: new GoogleAIBackend() });
+  if (withImage) {
+    return localImage ??= getGenerativeModel(ai, { mode: InferenceMode.ONLY_ON_DEVICE });
+  }
+  return localText ??= getGenerativeModel(ai, {
+    mode: InferenceMode.ONLY_ON_DEVICE,
+    onDeviceParams: { createOptions: { expectedInputs: [{ type: 'text', languages: ['en'] }] } }
   });
 }
 

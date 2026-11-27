@@ -1,6 +1,6 @@
-const ad = document.querySelector('[data-waitgoogle-ad]');
-if (ad) {
-  ad.addEventListener('click', async event => {
+const ads = document.querySelectorAll('[data-waitgoogle-ad]');
+if (ads.length) {
+  for (const ad of ads) ad.addEventListener('click', async event => {
     event.preventDefault();
     try {
       const image = ad.querySelector('img');
@@ -20,6 +20,10 @@ if (ad) {
     }
   });
 } else {
+  if (new URLSearchParams(location.search).get('offer') === 'unclear') {
+    for (const standard of document.querySelectorAll('[data-standard-offer]')) standard.hidden = true;
+    document.querySelector('[data-unclear-offer]').hidden = false;
+  }
   const tab = await chrome.tabs.getCurrent();
   const { sampleTab } = await chrome.storage.session.get('sampleTab');
   if (tab.id === sampleTab) {

@@ -55,14 +55,24 @@ async function askLocal(instruction, withImage = false) {
   if (withImage && ad?.image) {
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: ad.image.split(',')[1] } });
   }
-  const text = (await localModel().generateContent(parts)).response.text();
+  const text = (await localModel(parts.length > 1).generateContent(parts)).response.text();
   if (!text.trim()) throw new Error('Gemini Nano returned no text.');
   return text;
 }
 
 el('setup').onclick = run(async () => {
-  await localModel().initializeDeviceModel(progress => status('Downloading Gemini Nano… ' + Math.round(progress * 100) + '%'));
-  status('Gemini Nano is ready for local requests.');
+  const onProgress = progress => status('Downloading Gemini Nano… ' + Math.round(progress * 100) + '%');
+  try {
+    await localModel(true).initializeDeviceModel(onProgress);
+    status('Gemini Nano is ready for local image and text requests.');
+  } catch (imageError) {
+    try {
+      await localModel().initializeDeviceModel(onProgress);
+      status('Gemini Nano is ready for text. This browser cannot use local image input.');
+    } catch {
+      throw imageError;
+    }
+  }
 }, 'Checking Gemini Nano…');
 
 el('demo').onclick = () => chrome.tabs.create({ url: chrome.runtime.getURL('demo/ad.html') });
@@ -85,10 +95,19 @@ for (const kind of ['ad', 'product']) {
 
 el('compare').onclick = run(async () => {
   if (!ad || !product) throw new Error('Capture both the ad and the product page first.');
-  const reply = await askLocal('Compare the advertised and offered product variants, price, features and conditions. State whether they match, differ, or lack enough evidence. Quote the relevant lines and ask one question about the shopper’s needs.', true);
+  const instruction = 'Compare the advertised and offered product variants, price, features and conditions. State whether they match, differ, or lack enough evidence. Quote the relevant lines and ask one question about the shopper’s needs.';
+  let usedImage = Boolean(ad.image);
+  let reply;
+  try {
+    reply = await askLocal(instruction, usedImage);
+  } catch (error) {
+    if (!usedImage || !ad.text) throw error;
+    reply = await askLocal(instruction + ' Compare text evidence only. The ad image could not be analyzed.');
+    usedImage = false;
+  }
   conversation.push({ assistant: reply });
   addMessage('Gemini Nano · comparison', reply);
-  status('Comparison completed on this device.');
+  status(usedImage ? 'Image and text compared on this device.' : 'Text evidence compared on this device.');
 }, 'Comparing locally…');
 
 function speak(text) {

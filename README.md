@@ -25,3 +25,5 @@ MIT.
 ## Verification
 
 The sample ad opens from the extension itself and requires no merchant account. Use a separate Chrome profile for reviewer setup. Verify the local path after model download by turning off networking, comparing the ad with the offer, and asking a follow-up. Reconnect before testing the consent flow. The extension keeps the captured evidence in Chrome's session storage. Consultation turns are kept in the open panel.
+
+Two additional fictional offers appear below the main sample. **Tide Buds Plus** is a match at $79 with ANC. **Tide Buds from $49** is inconclusive because the destination omits the per-variant prices and features. Compare each offer separately and check whether the response quotes the relevant text and distinguishes missing evidence from a mismatch.
