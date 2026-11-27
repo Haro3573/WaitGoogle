@@ -4,7 +4,7 @@ WaitGoogle is a desktop Chrome extension that preserves an image ad, compares it
 
 ## Install for judging
 
-If you received the prebuilt Chrome ZIP, extract it and select the extracted folder in **Load unpacked**. It already points to the WaitGoogle Firebase web app. You can skip the Node.js and build steps below. The App Check debug token is provided separately.
+For the quickest setup, download the [prebuilt Chrome ZIP](https://github.com/Haro3573/WaitGoogle/releases/download/v0.1.0/waitgoogle-chrome.zip). Extract it, open `chrome://extensions`, enable Developer mode, and select the extracted folder in **Load unpacked**. The build points to the WaitGoogle Firebase web app. Skip steps 2 and 3 when using the ZIP. The App Check debug token is provided separately.
 
 1. Use desktop Google Chrome on a machine that supports Gemini Nano. See [Firebase's Chrome and model setup](https://firebase.google.com/docs/ai-logic/hybrid/web/get-started), including the multimodal Prompt API setting for your browser version.
 2. Use Node.js 24.12 or newer. Run `npm ci`. Copy `.env.example` to `.env.local` and supply the Firebase web app's API key, project ID, and app ID. The project must have Firebase AI Logic with the Gemini Developer API enabled.
