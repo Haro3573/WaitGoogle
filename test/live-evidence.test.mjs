@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isUnfinishedQuestion } from '../public/spoken-question.mjs';
+import { isUnfinishedQuestion, newTranscriptQuestions } from '../src/transcript.mjs';
 import { productEvidenceForSpeech, renderLiveEvidence } from '../src/live-evidence.mjs';
 
 const product = [
@@ -44,4 +44,15 @@ test('holds the real split utterance and resolves its bare transcribed price', (
   const answer = renderLiveEvidence('LINE 1', scope);
   assert.match(answer, /The Essential variant does not include active noise cancellation/);
   assert.doesNotMatch(answer, /The Plus variant/);
+});
+
+
+test('extracts two new verbatim spans, skips an overlap, and ignores invented text', () => {
+  const text = 'Does the 49 option include ANC? Nice. How long does the 79 variant last?';
+  const earlyEnd = 'Does the 49 option include ANC'.length;
+  const questions = ['Does the 49 option include ANC?', 'How long does the 79 variant last?', 'Are they waterproof?', 'Does the 49'];
+  assert.deepEqual(newTranscriptQuestions(questions, text, 100, 100 + earlyEnd).map(x => x.question), [
+    'How long does the 79 variant last'
+  ]);
+  assert.equal(newTranscriptQuestions(questions, text, 100, 0).length, 2);
 });

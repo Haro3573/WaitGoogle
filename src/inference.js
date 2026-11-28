@@ -11,6 +11,7 @@ const config = {
 let app;
 let localText;
 let localImage;
+let questionDetector;
 let cloud;
 let appCheck;
 
@@ -29,6 +30,21 @@ export function localModel(withImage = false) {
   return localText ??= getGenerativeModel(ai, {
     mode: InferenceMode.ONLY_ON_DEVICE,
     onDeviceParams: { createOptions: { expectedInputs: [{ type: 'text', languages: ['en'] }] } }
+  });
+}
+
+export function localQuestionDetector() {
+  const ai = getAI(firebaseApp(), { backend: new GoogleAIBackend() });
+  return questionDetector ??= getGenerativeModel(ai, {
+    mode: InferenceMode.ONLY_ON_DEVICE,
+    onDeviceParams: {
+      createOptions: { expectedInputs: [{ type: 'text', languages: ['en'] }] },
+      promptOptions: { responseConstraint: {
+        type: 'object',
+        properties: { questions: { type: 'array', items: { type: 'string' } } },
+        required: ['questions']
+      } }
+    }
   });
 }
 

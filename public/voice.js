@@ -1,5 +1,3 @@
-import { isUnfinishedQuestion } from './spoken-question.mjs';
-
 const button = document.querySelector('#listen');
 const status = document.querySelector('[role=status]');
 const transcript = document.querySelector('#transcript');
@@ -9,48 +7,69 @@ let speechError;
 const liveQA = document.querySelector('#live-qa');
 const liveAnswers = document.querySelector('#live-answers');
 const liveStatus = document.querySelector('#live-status');
-let pendingSpeech = '';
-let liveTimer;
-let answering = false;
+const windowLimit = 1500;
+let rollingTranscript = '';
+let transcriptOffset = 0;
+let answeredThrough = 0;
+let transcriptRevision = 0;
+let scannedRevision = 0;
+let liveSession = 0;
+let scanning = false;
 
-function scheduleLiveAnswer() {
-  clearTimeout(liveTimer);
-  if (liveQA.checked && pendingSpeech && !isUnfinishedQuestion(pendingSpeech)) {
-    liveTimer = setTimeout(answerLiveQuestion, 1600);
+function appendFinalSpeech(text) {
+  if (!text) return;
+  rollingTranscript += (rollingTranscript ? ' ' : '') + text;
+  if (rollingTranscript.length > windowLimit) {
+    const excess = rollingTranscript.length - windowLimit;
+    const boundary = rollingTranscript.indexOf(' ', excess);
+    const drop = boundary === -1 ? excess : boundary + 1;
+    rollingTranscript = rollingTranscript.slice(drop);
+    transcriptOffset += drop;
   }
+  transcriptRevision += 1;
 }
 
-async function answerLiveQuestion() {
-  if (!liveQA.checked || !pendingSpeech || answering) return;
-  const speech = pendingSpeech;
-  pendingSpeech = '';
-  answering = true;
-  liveStatus.textContent = 'Checking for a shopping question on this device…';
+async function scanTranscript() {
+  if (!liveQA.checked || scanning || scannedRevision === transcriptRevision) return;
+  scanning = true;
+  scannedRevision = transcriptRevision;
+  const session = liveSession;
+  liveStatus.textContent = 'Looking for shopping questions on this device…';
   try {
-    const result = await chrome.runtime.sendMessage({ liveShoppingSpeech: speech });
+    const result = await chrome.runtime.sendMessage({ liveTranscript: {
+      text: rollingTranscript,
+      offset: transcriptOffset,
+      answeredThrough
+    } });
+    if (session !== liveSession) return;
     if (result?.error) throw new Error(result.error);
     if (!result) throw new Error('Open the WaitGoogle side panel to use live answers.');
-    if (liveQA.checked && result.answer) {
+    for (const entry of result.answers) {
       const message = document.createElement('p');
       const question = document.createElement('strong');
-      question.textContent = speech;
-      message.append(question, document.createTextNode('\n' + result.answer));
+      question.textContent = entry.question;
+      message.append(question, document.createTextNode('\n' + entry.answer));
       liveAnswers.append(message);
+      answeredThrough = entry.end;
     }
     liveStatus.textContent = '';
   } catch (error) {
-    if (liveQA.checked) liveStatus.textContent = error.message;
+    if (session === liveSession) liveStatus.textContent = error.message;
   } finally {
-    answering = false;
-    scheduleLiveAnswer();
+    scanning = false;
+    scanTranscript();
   }
 }
 
 liveQA.onchange = () => {
   document.querySelector('#live-section').hidden = !liveQA.checked;
   if (liveQA.checked) return;
-  pendingSpeech = '';
-  clearTimeout(liveTimer);
+  liveSession += 1;
+  rollingTranscript = '';
+  transcriptOffset = 0;
+  answeredThrough = 0;
+  transcriptRevision = 0;
+  scannedRevision = 0;
   liveStatus.textContent = '';
 };
 
@@ -113,11 +132,11 @@ button.onclick = async () => {
       transcript.value = [previousTranscript, ...phrases].filter(Boolean).join(' ').slice(0, 1500);
       while (finalThrough < event.results.length && event.results[finalThrough].isFinal) {
         if (liveQA.checked) {
-          pendingSpeech = (pendingSpeech + ' ' + phrases[finalThrough]).trim().slice(-1500);
+          appendFinalSpeech(phrases[finalThrough]);
         }
         finalThrough += 1;
       }
-      scheduleLiveAnswer();
+      scanTranscript();
     };
     recognition.onerror = event => {
       speechError = 'Local speech recognition: ' + event.error + '.';
