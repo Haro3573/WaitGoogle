@@ -63,3 +63,12 @@ test('drops declarative speech misclassified by Nano and keeps its two real ques
   const proposals = ['Does the 49 option include ANC?', 'How long does the 79 option last?', 'I might shop next week.'];
   assert.deepEqual(newTranscriptQuestions(proposals, text, 0, 0).map(span => span.question), proposals.slice(0, 2).map(q => q.slice(0, -1)));
 });
+
+
+test('recovers the captured $79 option when live speech drops the word option', () => {
+  const listing = product.replace('includes active noise cancellation.', 'includes active noise cancellation and eight hours of battery life.');
+  const scope = productEvidenceForSpeech('how long does the 79 of last', listing);
+  const answer = renderLiveEvidence('LINE 1', scope);
+  assert.match(answer, /eight hours of battery life/);
+  assert.doesNotMatch(answer, /Essential/);
+});

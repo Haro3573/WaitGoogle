@@ -3,21 +3,26 @@ const spokenPricePattern = /(?:\$\s*|\bdollars?\s+)(\d[\d,]*(?:\.\d{1,2})?)(?!\d
 
 const optionPricePattern = /\b(\d[\d,]*(?:\.\d{1,2})?)\s+(?:option|variant|model|offer|version)\b/gi;
 
+const bareVariantPricePattern = /\bthe\s+(\d[\d,]*(?:\.\d{1,2})?)(?!\d|\.\d)/gi;
+
 function amounts(text, pattern) {
   return [...text.matchAll(pattern)].map(match => Number((match[1] ?? match[2]).replaceAll(',', '')));
 }
 
 export function productEvidenceForSpeech(speech, productText = '') {
-  const prices = [...new Set([...amounts(speech, spokenPricePattern), ...amounts(speech, optionPricePattern)])];
   const lines = productText.split('\n').map(line => line.trim()).filter(Boolean);
-  if (prices.length === 0) return { lines, priceScoped: false };
-
-  const matches = [];
   const headings = lines.flatMap((line, index) => {
     const linePrices = amounts(line, pricePattern);
     return linePrices.length ? [{ index, linePrices }] : [];
   });
+  const onPage = new Set(headings.flatMap(heading => heading.linePrices));
+  const explicitPrices = [...amounts(speech, spokenPricePattern), ...amounts(speech, optionPricePattern)];
+  const prices = explicitPrices.length
+    ? explicitPrices
+    : amounts(speech, bareVariantPricePattern).filter(price => onPage.has(price));
+  if (prices.length === 0) return { lines, priceScoped: false };
 
+  const matches = [];
   for (const [index, heading] of headings.entries()) {
     if (heading.linePrices.length !== 1 || !prices.includes(heading.linePrices[0])) continue;
     const next = headings[index + 1]?.index ?? lines.length;
