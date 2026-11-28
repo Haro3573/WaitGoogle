@@ -9,11 +9,11 @@ if (ads.length) {
       canvas.width = image.naturalWidth;
       canvas.height = image.naturalHeight;
       canvas.getContext('2d').drawImage(image, 0, 0);
-      await chrome.storage.session.set({
-        sampleTab: (await chrome.tabs.getCurrent()).id,
+      await chrome.storage.session.set({ offer: {
+        id: crypto.randomUUID(), tabId: (await chrome.tabs.getCurrent()).id,
         ad: { text: ad.innerText, image: canvas.toDataURL('image/jpeg', 0.9) },
-        product: null
-      });
+        product: null, sample: true
+      } });
       location.assign(ad.href);
     } catch {
       document.querySelector('[role=status]').textContent = 'Could not save the sample advertisement. Try again.';
@@ -25,10 +25,9 @@ if (ads.length) {
     document.querySelector('[data-unclear-offer]').hidden = false;
   }
   const tab = await chrome.tabs.getCurrent();
-  const { sampleTab } = await chrome.storage.session.get('sampleTab');
-  if (tab.id === sampleTab) {
+  const { offer } = await chrome.storage.session.get('offer');
+  if (offer?.sample && tab.id === offer.tabId) {
     const text = document.querySelector('[data-waitgoogle-product]').innerText;
-    await chrome.storage.session.set({ product: { text } });
-    await chrome.storage.session.remove('sampleTab');
+    await chrome.storage.session.set({ offer: { ...offer, product: { text } } });
   }
 }

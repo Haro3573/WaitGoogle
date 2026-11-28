@@ -1,43 +1,32 @@
-// This function runs in the page's isolated world through chrome.scripting.
-export function readPage(kind) {
-  const visibleText = element => (element?.innerText || '').trim();
-  if (kind === 'ad') {
-    const ad = document.querySelector('[data-waitgoogle-ad], main a:has(img), article a:has(img)');
-    if (!ad) throw new Error('No supported image ad was found on this page.');
-    const img = ad.querySelector('img');
-    let image = '';
-    if (img?.complete && img.naturalWidth) {
-      try {
-        const canvas = document.createElement('canvas');
-        const ratio = Math.min(1, 720 / Math.max(img.naturalWidth, img.naturalHeight));
-        canvas.width = Math.round(img.naturalWidth * ratio);
-        canvas.height = Math.round(img.naturalHeight * ratio);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        image = canvas.toDataURL('image/jpeg', 0.85);
-      } catch {
-        // Some third-party images cannot be copied. Keep their visible caption.
-      }
-    }
-    return { text: [visibleText(ad), img?.alt].filter(Boolean).join('\n').slice(0, 3000), image };
-  }
-  const product = document.querySelector('[data-waitgoogle-product], main, article') || document.body;
-  return { text: visibleText(product).slice(0, 6500) };
-}
-
-export async function capture(kind) {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+export async function captureProduct(tabId) {
   try {
-    const [result] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: readPage,
-      args: [kind]
+    const [capture] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => {
+        const root = document.querySelector('[data-waitgoogle-product], main, article') || document.body;
+        return (root?.innerText || '').trim().slice(0, 6500);
+      }
     });
-    if (!result?.result?.text && !result?.result?.image) throw new Error('No product evidence was found.');
-    return result.result;
+    if (!capture?.result) throw new Error('No product text found.');
+    return { text: capture.result };
   } catch (error) {
-    if (String(error.message).includes('permission') || String(error.message).includes('Cannot access')) {
-      throw new Error('Click the WaitGoogle toolbar icon on this tab to grant page access, then retry.');
+    if (/permission|cannot access/i.test(error.message)) {
+      throw new Error('Open WaitGoogle from the toolbar on the product tab, then try again.');
     }
     throw error;
   }
+}
+
+export async function enableAdClicks(tab) {
+  const url = new URL(tab.url);
+  if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Open a shopping site first.');
+  const origin = url.protocol + '//' + url.hostname + '/*';
+  if (!await chrome.permissions.request({ origins: [origin] })) return false;
+  const id = 'ads-' + url.protocol.slice(0, -1) + '-' + url.hostname.replace(/[^a-z0-9-]/gi, '-');
+  const [registered] = await chrome.scripting.getRegisteredContentScripts({ ids: [id] });
+  if (!registered) {
+    await chrome.scripting.registerContentScripts([{ id, matches: [origin], js: ['ad-click.js'], runAt: 'document_start' }]);
+  }
+  await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['ad-click.js'] });
+  return true;
 }

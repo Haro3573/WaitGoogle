@@ -3,43 +3,52 @@ import { runInNewContext } from 'node:vm';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-const background = await readFile(new URL('../public/background.js', import.meta.url), 'utf8');
+const worker = await readFile(new URL('../public/background.js', import.meta.url), 'utf8');
 
-function loadBackground(log, evidence) {
+function loadWorker(landing) {
+  const log = [];
+  let offer;
   let click;
-  let finish;
-  const finished = new Promise(resolve => { finish = resolve; });
+  let complete;
+  const saved = new Promise(resolve => { complete = resolve; });
   const chrome = {
-    runtime: { onInstalled: { addListener() {} } },
-    contextMenus: { onClicked: { addListener(callback) { click = callback; } } },
-    sidePanel: { async open() {} },
-    scripting: { async executeScript() { return [{ result: evidence }]; } },
-    storage: { session: { async set(value) { log.push(['saved', value]); if (!value.ad) finish(); } } },
-    tabs: { async update(id, value) { log.push(['navigated', id, value]); finish(); } }
+    runtime: { onInstalled: { addListener() {} }, onMessage: { addListener(fn) { click = fn; } } },
+    sidePanel: { async open() { log.push('panel opened'); } },
+    scripting: { async executeScript() { return [{ result: landing }]; } },
+    storage: { session: {
+      async get() { return { offer }; },
+      async set(value) {
+        offer = value.offer;
+        log.push(offer.product ? 'product attached' : 'ad saved');
+        if (!landing || offer.product) complete();
+      }
+    } },
+    tabs: { async get() { return { status: 'complete' }; }, onUpdated: { addListener() {} } }
   };
-  runInNewContext(background, { chrome, URL });
-  return { click, finished };
+  runInNewContext(worker, { chrome, console, crypto, URL });
+  return { click, log, saved, getOffer: () => offer };
 }
 
-test('captures the selected ad and clears the previous offer before navigating', async () => {
-  const log = [];
-  const evidence = { text: 'Earbuds for $49', image: 'data:image/jpeg;base64,evidence' };
-  const { click, finished } = loadBackground(log, evidence);
-  const linkUrl = 'https://shop.example/earbuds';
-  click({ menuItemId: 'capture-ad', linkUrl, srcUrl: 'https://shop.example/ad.jpg' }, { id: 18 });
-  await finished;
-  assert.equal(log[0][0], 'saved');
-  assert.equal(log[0][1].ad, evidence);
-  assert.equal(log[0][1].product, null);
-  assert.equal(log[1][0], 'navigated');
-  assert.equal(log[1][2].url, linkUrl);
+const message = {
+  captureAdClick: true, sameTab: true, source: 'https://example.test/ads', destination: 'https://example.test/offer',
+  ad: { text: 'Ad for earbuds', image: 'data:image/jpeg;base64,AAAA' }
+};
+const sender = { tab: { id: 7 }, frameId: 0 };
+
+test('a click opens the panel and saves the ad before attaching its landing evidence', async () => {
+  const fixture = loadWorker({ url: message.destination, text: 'The $49 offer lacks ANC.' });
+  fixture.click(message, sender);
+  await fixture.saved;
+  assert.deepEqual(fixture.log, ['panel opened', 'ad saved', 'product attached']);
+  assert.equal(fixture.getOffer().ad.image, message.ad.image);
+  assert.equal(fixture.getOffer().product.text, 'The $49 offer lacks ANC.');
 });
 
-test('shows a capture error without navigating when the image has no web destination', async () => {
-  const log = [];
-  const { click, finished } = loadBackground(log);
-  click({ menuItemId: 'capture-ad', srcUrl: 'https://shop.example/ad.jpg' }, { id: 18 });
-  await finished;
-  assert.equal(log.length, 1);
-  assert.match(log[0][1].captureNotice, /links to a product page/);
+test('text-only ad capture starts without a screenshot or landing evidence', async () => {
+  const fixture = loadWorker(null);
+  fixture.click({ ...message, ad: { text: 'Ad for earbuds', image: '' }, sameTab: false }, sender);
+  await fixture.saved;
+  assert.equal(fixture.getOffer().ad.image, '');
+  assert.equal(fixture.getOffer().product, null);
+  assert.deepEqual(fixture.log, ['panel opened', 'ad saved']);
 });

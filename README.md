@@ -1,33 +1,25 @@
 # WaitGoogle
 
-WaitGoogle is a desktop Chrome extension that preserves an image ad, compares it with the actual product offer, and helps shoppers decide what to buy. Firebase AI Logic runs the comparison and consultation on-device with Gemini Nano. For deeper research, the shopper reviews and approves the exact text sent to Cloud Gemini.
+WaitGoogle is a Chrome extension that helps a shopper understand a clicked image ad. Gemini Nano reads the captured ad on-device and prepares an opening prompt. After the shopper approves the text, Gemini opens a conversation explaining the offer.
 
-## Install for judging
+## Install
 
-For the quickest setup, download the [prebuilt Chrome ZIP](https://github.com/Haro3573/WaitGoogle/releases/latest/download/waitgoogle-chrome.zip). Extract it, open `chrome://extensions`, enable Developer mode, and select the extracted folder in **Load unpacked**. The build points to the WaitGoogle Firebase web app. Skip steps 2 and 3 when using the ZIP. The App Check debug token is provided separately.
+Download the [prebuilt Chrome ZIP](https://github.com/Haro3573/WaitGoogle/releases/latest/download/waitgoogle-chrome.zip). Extract it and use **Load unpacked** in `chrome://extensions` with Developer mode enabled.
 
-1. Use desktop Google Chrome on a machine that supports Gemini Nano. See [Firebase's Chrome and model setup](https://firebase.google.com/docs/ai-logic/hybrid/web/get-started), including the multimodal Prompt API setting for your browser version.
-2. Use Node.js 24.12 or newer. Run `npm ci`. Copy `.env.example` to `.env.local` and supply the Firebase web app's API key, project ID, and app ID. The project must have Firebase AI Logic with the Gemini Developer API enabled.
-3. Run `npm run build`. In `chrome://extensions`, enable Developer mode, select **Load unpacked**, and choose `dist`.
-4. In Firebase App Check, register a judge-specific debug token for the web app. Enter it in the extension's **Options** page. Share judge tokens privately. The MV3 build uses the SDK's debug token exchange without loading remote reCAPTCHA scripts.
-5. Pin WaitGoogle, open its side panel, and select **Set up local AI**. Allow any model download to finish before testing offline.
+To build from source, use Node.js 24.12 or newer, run `npm ci`, copy `.env.example` to `.env.local`, and enter the Firebase web app configuration. Enable Firebase AI Logic with the Gemini Developer API in that project, then run `npm run build` and load `dist`.
 
-## Try the demo
+Use desktop Chrome with [on-device Gemini Nano support](https://firebase.google.com/docs/ai-logic/hybrid/web/get-started). Open WaitGoogle and choose **Set up local AI** to download the model if needed. For the cloud conversation, enter the privately supplied Firebase App Check debug token in the extension's Options page.
 
-Open **Open the sample ad**, and click the sponsored offer. The side panel saves the ad before navigation and reads the two variants on the destination page. On a normal website, right-click a linked ad image and choose **Save image ad and open its offer**. Once the destination opens, click the WaitGoogle toolbar icon to grant access to that tab and choose **Capture product page**. Some sites restrict copying image pixels. When visible ad text is available, the extension keeps that text. The fictional $49 Tide Buds Essential variant lacks active noise cancellation. The $79 Plus variant includes it. Select **Compare with Gemini Nano** and ask a follow-up about your commute and budget.
+## Shop with WaitGoogle
 
-**Start microphone** opens a WaitGoogle tab. Choose **Start local transcription** and allow microphone access for WaitGoogle when Chrome prompts. The English speech pack transcribes audio on the device. When finished, choose **Stop microphone**. Edit the text if needed and choose **Use transcript** to return it to the side panel. Select **Ask locally** there. The reply uses a local English speech synthesis voice when one is available.
+1. On a regular site, open the extension and choose **Enable on this site** once. Left-click a labelled image ad. The extension captures the visible image and text before the page leaves and opens the side panel. Ordinary links keep their usual behavior.
+2. Nano prepares an opening prompt immediately. WaitGoogle adds product-page text when it has access to the destination. For a cross-site destination, open WaitGoogle from the toolbar on that page and choose **Capture product details** if you want to include it.
+3. Review or edit the opening prompt and choose **Approve and start conversation**. Gemini explains the offer, flags gaps in the evidence, and asks what matters to you. You can reply about the same offer.
 
-**Answer shopping questions as I speak** is optional. While the microphone is active, Gemini Nano scans a rolling window of finalized speech, extracts complete shopping questions, and shows evidence-backed answers in the microphone tab and side panel. The captured ad image is prepared on-device in parallel with microphone setup. Audio, question detection, and answers stay on the device.
+The prototype recognizes linked images in containers marked as sponsored, promoted, or ads. Cross-origin image restrictions can leave the captured caption as the available evidence. The cloud request carries reviewed text. The image itself stays on the device.
 
-**Prepare cloud request** creates an editable draft. Cancel to discard it, or select **Approve and send** to share the text with Cloud Gemini. Current cloud responses reason over the approved text. They do not fetch live listings.
+## Try the sample
 
-## License
+Choose **Open the sample ad**, then left-click the $49 Tide Buds ad. The fictional product page shows that the $49 Essential variant lacks active noise cancellation, while the $79 Plus variant includes it. The sample requires no merchant account and attaches the product evidence automatically.
 
-MIT.
-
-## Verification
-
-The sample ad opens from the extension itself and requires no merchant account. Use a separate Chrome profile for reviewer setup. Verify the local path after model download by turning off networking, comparing the ad with the offer, and asking a follow-up. Reconnect before testing the consent flow. The extension keeps the captured evidence in Chrome's session storage. Consultation turns are kept in the open panel.
-
-Two additional fictional offers appear below the main sample. **Tide Buds Plus** is a match at $79 with ANC. **Tide Buds from $49** is inconclusive because the destination omits the per-variant prices and features. Compare each offer separately and check whether the response quotes the relevant text and distinguishes missing evidence from a mismatch.
+MIT license.

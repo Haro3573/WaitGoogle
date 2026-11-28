@@ -1,15 +1,14 @@
 {
   "manifest_version": 3,
   "name": "WaitGoogle",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "description": "Check an ad against the product page and get private shopping advice.",
   "minimum_chrome_version": "139",
   "permissions": [
     "sidePanel",
     "storage",
     "scripting",
-    "activeTab",
-    "contextMenus"
+    "activeTab"
   ],
   "host_permissions": [
     "https://firebasevertexai.googleapis.com/*",
@@ -24,5 +23,9 @@
   "options_page": "settings.html",
   "action": {
     "default_title": "Open WaitGoogle"
-  }
+  },
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ]
 }

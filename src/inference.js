@@ -11,7 +11,6 @@ const config = {
 let app;
 let localText;
 let localImage;
-let questionDetector;
 let cloud;
 let appCheck;
 
@@ -33,22 +32,7 @@ export function localModel(withImage = false) {
   });
 }
 
-export function localQuestionDetector() {
-  const ai = getAI(firebaseApp(), { backend: new GoogleAIBackend() });
-  return questionDetector ??= getGenerativeModel(ai, {
-    mode: InferenceMode.ONLY_ON_DEVICE,
-    onDeviceParams: {
-      createOptions: { expectedInputs: [{ type: 'text', languages: ['en'] }] },
-      promptOptions: { responseConstraint: {
-        type: 'object',
-        properties: { questions: { type: 'array', items: { type: 'string' } } },
-        required: ['questions']
-      } }
-    }
-  });
-}
-
-export async function sendApprovedText(text) {
+export async function sendApprovedText(text, history = []) {
   if (!cloud) {
     const stored = await chrome.storage.local.get('appCheckDebugToken');
     if (!stored.appCheckDebugToken) throw new Error('Register an App Check debug token and add it in the extension settings.');
@@ -66,5 +50,6 @@ export async function sendApprovedText(text) {
     });
   }
   await getToken(appCheck);
-  return (await cloud.generateContent(text)).response.text();
+  const contents = [...history, { role: 'user', parts: [{ text }] }];
+  return (await cloud.generateContent({ contents })).response.text();
 }
