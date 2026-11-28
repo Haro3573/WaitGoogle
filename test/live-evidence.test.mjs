@@ -56,3 +56,10 @@ test('extracts two new verbatim spans, skips an overlap, and ignores invented te
   ]);
   assert.equal(newTranscriptQuestions(questions, text, 100, 0).length, 2);
 });
+
+
+test('drops declarative speech misclassified by Nano and keeps its two real questions', () => {
+  const text = 'I commute daily. Does the 49 option include ANC? How long does the 79 option last? I might shop next week.';
+  const proposals = ['Does the 49 option include ANC?', 'How long does the 79 option last?', 'I might shop next week.'];
+  assert.deepEqual(newTranscriptQuestions(proposals, text, 0, 0).map(span => span.question), proposals.slice(0, 2).map(q => q.slice(0, -1)));
+});
